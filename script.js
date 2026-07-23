@@ -3,6 +3,13 @@
 
   var CONTACT_EMAIL = "keshavkumar64581@gmail.com";
 
+  // Formspree endpoint for in-page submissions (no email app popup).
+  // Get your own free endpoint at https://formspree.io (sign up with
+  // keshavkumar64581@gmail.com, create a form, paste its URL below).
+  // Until you replace this placeholder, the form automatically falls
+  // back to opening the visitor's email app instead — it never breaks.
+  var FORMSPREE_ENDPOINT = "https://formspree.io/f/meeyrgbg";
+
   /* ---------- Footer year ---------- */
   var yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
@@ -128,9 +135,29 @@
     });
   }
 
-  /* ---------- Contact form -> opens the visitor's email client ---------- */
+  /* ---------- Contact form ----------
+     Primary path: submit in-page to Formspree (visitor never leaves
+     the site, no email app popup). If the endpoint hasn't been set up
+     yet, or the request fails for any reason (offline, ad-blocker,
+     etc.), it falls back to opening the visitor's email app so a
+     message is never lost. */
   var form = document.getElementById("contactForm");
   var formNote = document.getElementById("formNote");
+  var submitBtn = form ? form.querySelector(".form-submit") : null;
+
+  function isFormspreeConfigured() {
+    return FORMSPREE_ENDPOINT.indexOf("YOUR_FORM_ID") === -1;
+  }
+
+  function openMailClient(name, email, subject, message) {
+    var mailSubject = subject ? subject : "Portfolio message from " + name;
+    var mailBody = "Name: " + name + "\n" + "Email: " + email + "\n\n" + message;
+    var mailtoLink =
+      "mailto:" + CONTACT_EMAIL +
+      "?subject=" + encodeURIComponent(mailSubject) +
+      "&body=" + encodeURIComponent(mailBody);
+    window.location.href = mailtoLink;
+  }
 
   if (form) {
     form.addEventListener("submit", function (e) {
@@ -152,24 +179,58 @@
         return;
       }
 
-      var mailSubject = subject ? subject : "Portfolio message from " + name;
-      var mailBody =
-        "Name: " + name + "\n" +
-        "Email: " + email + "\n\n" +
-        message;
+      // Formspree isn't set up yet: use the reliable mailto fallback.
+      if (!isFormspreeConfigured()) {
+        openMailClient(name, email, subject, message);
+        showNote(
+          "Opening your email app with the message ready to send. If nothing opens, email me directly at " + CONTACT_EMAIL + ".",
+          "success"
+        );
+        form.reset();
+        return;
+      }
 
-      var mailtoLink =
-        "mailto:" + CONTACT_EMAIL +
-        "?subject=" + encodeURIComponent(mailSubject) +
-        "&body=" + encodeURIComponent(mailBody);
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Sending…";
+      }
+      showNote("Sending your message…", "");
 
-      window.location.href = mailtoLink;
-
-      showNote(
-        "Opening your email app with the message ready to send. If nothing opens, email me directly at " + CONTACT_EMAIL + ".",
-        "success"
-      );
-      form.reset();
+      fetch(FORMSPREE_ENDPOINT, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: new FormData(form),
+      })
+        .then(function (response) {
+          if (response.ok) {
+            showNote("Thanks! Your message has been sent — I'll get back to you soon.", "success");
+            form.reset();
+          } else {
+            return response.json().then(function (data) {
+              var msg =
+                data && data.errors && data.errors.length
+                  ? data.errors.map(function (er) { return er.message; }).join(", ")
+                  : "Something went wrong sending your message.";
+              throw new Error(msg);
+            });
+          }
+        })
+        .catch(function () {
+          // Network/service issue: fall back to the email app so the
+          // message still reaches the inbox.
+          openMailClient(name, email, subject, message);
+          showNote(
+            "Couldn't send that in-page, so I've opened your email app instead. If nothing opens, email me directly at " + CONTACT_EMAIL + ".",
+            "error"
+          );
+          form.reset();
+        })
+        .finally(function () {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Send message";
+          }
+        });
     });
   }
 

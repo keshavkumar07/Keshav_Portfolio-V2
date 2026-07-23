@@ -10,15 +10,28 @@ resume and the notes in `Info.docx`.
 - `images/keshav.jpg` — your headshot, optimized for the web
 
 ## How the contact form works
-There's no paid backend, so the "Send message" button opens the visitor's
-email app with a pre-filled message addressed to
-**keshavkumar64581@gmail.com** — so every submission lands straight in your
-inbox with no server to maintain. There's also a "Copy" button next to your
-email address for anyone who prefers to email you directly.
+The form submits in-page via **Formspree** (free, no server to maintain) —
+visitors never leave your site or see an email app popup. Submissions land
+straight in your inbox. There's also a "Copy" button next to your email
+address for anyone who prefers to email you directly.
 
-If you'd like true in-page submissions later (no email app popup), you can
-connect a free service like **Formspree** or **EmailJS** — that only requires
-changing a few lines in `script.js`, happy to help with that when you're ready.
+**One-time setup (2 minutes) to turn this on:**
+1. Go to [formspree.io](https://formspree.io) and sign up with
+   `keshavkumar64581@gmail.com`.
+2. Create a new form. Formspree gives you an endpoint URL that looks like
+   `https://formspree.io/f/abcdwxyz`.
+3. Open `script.js`, find this line near the top:
+   ```js
+   var FORMSPREE_ENDPOINT = "https://formspree.io/f/YOUR_FORM_ID";
+   ```
+   and replace `YOUR_FORM_ID` with your real ID.
+4. Save, re-upload/redeploy the file. Test by submitting the form yourself.
+5. Formspree emails you a confirmation link the first time — click it to
+   activate the form.
+
+**Until you do this**, the form still works — it automatically falls back to
+opening the visitor's email app pre-filled to `keshavkumar64581@gmail.com`,
+so no message is ever lost either way.
 
 ## Editing content
 Everything lives in plain HTML in `index.html` — search for the section you
