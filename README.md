@@ -33,6 +33,26 @@ address for anyone who prefers to email you directly.
 opening the visitor's email app pre-filled to `keshavkumar64581@gmail.com`,
 so no message is ever lost either way.
 
+**⚠️ Important — how to test it correctly:**
+Don't test by double-clicking `index.html` on your computer. That opens it
+as a `file://` address, and browsers block the kind of request Formspree
+needs from local files — it's a browser security rule, not a bug in the
+site. To test properly, either:
+- **Deploy it** (GitHub Pages, Netlify, Vercel — all free), then test on the
+  real `https://` link, or
+- **Run a local server** first: open a terminal in this folder and run
+  `python3 -m http.server 8000`, then visit `http://localhost:8000` in
+  your browser.
+
+If you open your browser's DevTools (`F12` → Console tab) while testing,
+any real error will be printed there — useful if you ever need help
+debugging again.
+
+### Fixed in this version
+A bug in `script.js` was silently crashing the submit button right before
+it could reach Formspree — it never even sent the request. That's now
+fixed and verified working end-to-end.
+
 ## Editing content
 Everything lives in plain HTML in `index.html` — search for the section you
 want to change (e.g. `id="projects"`) and edit the text directly. No build

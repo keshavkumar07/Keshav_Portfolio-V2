@@ -190,18 +190,44 @@
         return;
       }
 
+      // Formspree can't be reached from a page opened directly as a
+      // local file (file:// — e.g. double-clicking index.html). Browsers
+      // don't send a referer header from file://, and Formspree rejects
+      // the request. This only affects local testing — once the site is
+      // hosted (GitHub Pages, Netlify, etc.) this check is skipped and
+      // in-page sending works normally.
+      if (window.location.protocol === "file:") {
+        openMailClient(name, email, subject, message);
+        showNote(
+          "In-page sending only works once this site is hosted on a real web address (opening the file directly blocks it). I've opened your email app instead so this message isn't lost.",
+          "error"
+        );
+        form.reset();
+        return;
+      }
+
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.textContent = "Sending…";
       }
       showNote("Sending your message…", "");
 
+      // Guard against the request hanging indefinitely (slow network,
+      // an ad-blocker silently dropping it, etc.) so the button never
+      // gets stuck on "Sending…".
+      var controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+      var timeoutId = setTimeout(function () {
+        if (controller) controller.abort();
+      }, 10000);
+
       fetch(FORMSPREE_ENDPOINT, {
         method: "POST",
         headers: { Accept: "application/json" },
         body: new FormData(form),
+        signal: controller ? controller.signal : undefined,
       })
         .then(function (response) {
+          clearTimeout(timeoutId);
           if (response.ok) {
             showNote("Thanks! Your message has been sent — I'll get back to you soon.", "success");
             form.reset();
@@ -215,12 +241,21 @@
             });
           }
         })
-        .catch(function () {
-          // Network/service issue: fall back to the email app so the
-          // message still reaches the inbox.
+        .catch(function (err) {
+          clearTimeout(timeoutId);
+          // Network/service issue, timeout, or an ad-blocker: fall back
+          // to the email app so the message still reaches the inbox.
+          // Full error is logged to the console so it can be diagnosed
+          // (open browser DevTools → Console to see it).
+          console.error("Formspree submission failed:", err);
           openMailClient(name, email, subject, message);
+
+          var reason =
+            err && err.name === "AbortError"
+              ? "The request took too long"
+              : "Couldn't send that in-page";
           showNote(
-            "Couldn't send that in-page, so I've opened your email app instead. If nothing opens, email me directly at " + CONTACT_EMAIL + ".",
+            reason + ", so I've opened your email app instead. If nothing opens, email me directly at " + CONTACT_EMAIL + ".",
             "error"
           );
           form.reset();
@@ -238,6 +273,6 @@
     if (!formNote) return;
     formNote.textContent = text;
     formNote.classList.remove("success", "error");
-    formNote.classList.add(type);
+    if (type) formNote.classList.add(type);
   }
 })();
