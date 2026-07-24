@@ -375,18 +375,18 @@
         </div>
         <div class="form-row">
           <label for="email">Email</label>
-          <input type="email" id="email" name="_replyto" placeholder="you@example.com" required />
+          <input type="email" id="email" name="email" placeholder="you@example.com" required />
         </div>
         <div class="form-row">
           <label for="subject">Subject</label>
-          <input type="text" id="subject" name="_subject" placeholder="What's this about?" />
+          <input type="text" id="subject" name="subject" placeholder="What's this about?" />
         </div>
         <div class="form-row">
           <label for="message">Message</label>
           <textarea id="message" name="message" rows="5" placeholder="Write your feedback or message here..." required></textarea>
         </div>
         <!-- honeypot field to cut down on spam; hidden from real visitors -->
-        <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" />
+        <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off" />
         <button type="submit" class="btn btn-primary form-submit">Send message</button>
         <p class="form-note" id="formNote" role="status" aria-live="polite"></p>
       </form>

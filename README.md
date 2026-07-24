@@ -10,34 +10,26 @@ resume and the notes in `Info.docx`.
 - `images/keshav.jpg` — your headshot, optimized for the web
 
 ## How the contact form works
-The form submits in-page via **Formspree** (free, no server to maintain) —
-visitors never leave your site or see an email app popup. Submissions land
-straight in your inbox. There's also a "Copy" button next to your email
-address for anyone who prefers to email you directly.
+The form submits in-page via **FormSubmit** (free, no account or dashboard
+needed) — visitors never leave your site or see an email app popup.
+Submissions land straight in your inbox at `keshavkumar64581@gmail.com`.
+There's also a "Copy" button next to your email address for anyone who
+prefers to email you directly.
 
-**One-time setup (2 minutes) to turn this on:**
-1. Go to [formspree.io](https://formspree.io) and sign up with
-   `keshavkumar64581@gmail.com`.
-2. Create a new form. Formspree gives you an endpoint URL that looks like
-   `https://formspree.io/f/abcdwxyz`.
-3. Open `script.js`, find this line near the top:
-   ```js
-   var FORMSPREE_ENDPOINT = "https://formspree.io/f/YOUR_FORM_ID";
-   ```
-   and replace `YOUR_FORM_ID` with your real ID.
-4. Save, re-upload/redeploy the file. Test by submitting the form yourself.
-5. Formspree emails you a confirmation link the first time — click it to
-   activate the form.
-
-**Until you do this**, the form still works — it automatically falls back to
-opening the visitor's email app pre-filled to `keshavkumar64581@gmail.com`,
-so no message is ever lost either way.
+**One-time activation (30 seconds, and it's automatic):**
+Nothing to sign up for or configure — the code already points at your email.
+The very first time anyone submits the form on the live site, FormSubmit
+sends **you** a one-time email titled something like "Confirm your
+FormSubmit form." Click the activation link in it once, and every
+submission after that — including that very first one — lands in your
+inbox automatically. (Check your spam folder if you don't see it within a
+minute or two.)
 
 **⚠️ Important — how to test it correctly:**
 Don't test by double-clicking `index.html` on your computer. That opens it
-as a `file://` address, and browsers block the kind of request Formspree
-needs from local files — it's a browser security rule, not a bug in the
-site. To test properly, either:
+as a `file://` address, and browsers block the kind of request in-page
+sending needs from local files — it's a browser security rule, not a bug
+in the site. To test properly, either:
 - **Deploy it** (GitHub Pages, Netlify, Vercel — all free), then test on the
   real `https://` link, or
 - **Run a local server** first: open a terminal in this folder and run
@@ -47,11 +39,6 @@ site. To test properly, either:
 If you open your browser's DevTools (`F12` → Console tab) while testing,
 any real error will be printed there — useful if you ever need help
 debugging again.
-
-### Fixed in this version
-A bug in `script.js` was silently crashing the submit button right before
-it could reach Formspree — it never even sent the request. That's now
-fixed and verified working end-to-end.
 
 ## Editing content
 Everything lives in plain HTML in `index.html` — search for the section you

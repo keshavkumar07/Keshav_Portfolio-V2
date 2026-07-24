@@ -3,12 +3,13 @@
 
   var CONTACT_EMAIL = "keshavkumar64581@gmail.com";
 
-  // Formspree endpoint for in-page submissions (no email app popup).
-  // Get your own free endpoint at https://formspree.io (sign up with
-  // keshavkumar64581@gmail.com, create a form, paste its URL below).
-  // Until you replace this placeholder, the form automatically falls
-  // back to opening the visitor's email app instead — it never breaks.
-  var FORMSPREE_ENDPOINT = "https://formspree.io/f/meeyrgbg";
+  // FormSubmit endpoint for in-page submissions (no email app popup,
+  // no account/dashboard needed — it just points at your email).
+  // The very first message ever sent through this will trigger a one-time
+  // "Confirm your FormSubmit form" email from FormSubmit to this address —
+  // click the activation link in it once, and every submission after that
+  // (including that first one) delivers automatically.
+  var FORMSUBMIT_ENDPOINT = "https://formsubmit.co/ajax/" + CONTACT_EMAIL;
 
   /* ---------- Footer year ---------- */
   var yearEl = document.getElementById("year");
@@ -145,10 +146,6 @@
   var formNote = document.getElementById("formNote");
   var submitBtn = form ? form.querySelector(".form-submit") : null;
 
-  function isFormspreeConfigured() {
-    return FORMSPREE_ENDPOINT.indexOf("YOUR_FORM_ID") === -1;
-  }
-
   function openMailClient(name, email, subject, message) {
     var mailSubject = subject ? subject : "Portfolio message from " + name;
     var mailBody = "Name: " + name + "\n" + "Email: " + email + "\n\n" + message;
@@ -179,23 +176,11 @@
         return;
       }
 
-      // Formspree isn't set up yet: use the reliable mailto fallback.
-      if (!isFormspreeConfigured()) {
-        openMailClient(name, email, subject, message);
-        showNote(
-          "Opening your email app with the message ready to send. If nothing opens, email me directly at " + CONTACT_EMAIL + ".",
-          "success"
-        );
-        form.reset();
-        return;
-      }
-
-      // Formspree can't be reached from a page opened directly as a
+      // FormSubmit can't be reached from a page opened directly as a
       // local file (file:// — e.g. double-clicking index.html). Browsers
-      // don't send a referer header from file://, and Formspree rejects
-      // the request. This only affects local testing — once the site is
-      // hosted (GitHub Pages, Netlify, etc.) this check is skipped and
-      // in-page sending works normally.
+      // don't send the headers it needs from file://. This only affects
+      // local testing — once the site is hosted (GitHub Pages, Netlify,
+      // etc.) this check is skipped and in-page sending works normally.
       if (window.location.protocol === "file:") {
         openMailClient(name, email, subject, message);
         showNote(
@@ -220,26 +205,32 @@
         if (controller) controller.abort();
       }, 10000);
 
-      fetch(FORMSPREE_ENDPOINT, {
+      fetch(FORMSUBMIT_ENDPOINT, {
         method: "POST",
-        headers: { Accept: "application/json" },
-        body: new FormData(form),
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          name: name,
+          email: email,
+          message: message,
+          _subject: subject ? subject : "Portfolio message from " + name,
+          _honey: "", // honeypot — real visitors never fill this in
+          _template: "table",
+        }),
         signal: controller ? controller.signal : undefined,
       })
         .then(function (response) {
           clearTimeout(timeoutId);
-          if (response.ok) {
-            showNote("Thanks! Your message has been sent — I'll get back to you soon.", "success");
-            form.reset();
-          } else {
-            return response.json().then(function (data) {
-              var msg =
-                data && data.errors && data.errors.length
-                  ? data.errors.map(function (er) { return er.message; }).join(", ")
-                  : "Something went wrong sending your message.";
-              throw new Error(msg);
-            });
-          }
+          return response.json().then(function (data) {
+            if (response.ok && data && data.success !== "false") {
+              showNote("Thanks! Your message has been sent — I'll get back to you soon.", "success");
+              form.reset();
+            } else {
+              throw new Error((data && data.message) || "Something went wrong sending your message.");
+            }
+          });
         })
         .catch(function (err) {
           clearTimeout(timeoutId);
@@ -247,7 +238,7 @@
           // to the email app so the message still reaches the inbox.
           // Full error is logged to the console so it can be diagnosed
           // (open browser DevTools → Console to see it).
-          console.error("Formspree submission failed:", err);
+          console.error("FormSubmit submission failed:", err);
           openMailClient(name, email, subject, message);
 
           var reason =
